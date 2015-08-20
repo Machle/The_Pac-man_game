@@ -106,12 +106,14 @@ class Game:
     def mainloop(self):
         while 1:
             if self.running:
-                self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
-                if self.Pac.hitwall():
+                if not self.Pac.hitwall():
+                    self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
+                    #time.sleep()
+                else:
+                    #self.Pac.canvas.bind_all(self.Pac.hitwall(), self.Pac.stop)
                     self.Pac.stop()
-                    time.sleep()
-                if self.Pac.eaten:
-                    self.canvas.grid()
+                #if self.Pac.eaten:
+                    #self.canvas.grid()
             self.tk.update_idletasks()
             self.tk.update()
             time.sleep(0.01)
@@ -120,7 +122,9 @@ class Pacman:
     def __init__(self, canvas, color):
         self.canvas = canvas
         self.id = canvas.create_oval(10, 10, 35, 35, fill = color)
-        self.canvas.move(self.id, 400, 350)
+        self.canvas.move(self.id, 400, 375)
+        #self.pos = self.canvas.coords(self.id)
+        #print(pos)
         self.x = 0
         self.y = 0
         self.canvas.bind_all('<KeyPress-Left>', self.turn_left)
@@ -128,6 +132,7 @@ class Pacman:
         self.canvas.bind_all('<KeyPress-Up>', self.go_up)
         self.canvas.bind_all('<KeyPress-Down>', self.go_down)
         self.canvas.bind_all('<KeyRelease>', self.stop)
+        self.canvas.bind_all(self.hitwall(), self.stop)
 
     def eaten(self):
         for point in points:
@@ -141,13 +146,10 @@ class Pacman:
 
     def turn_left(self, event):
         self.x = -2
-        
-        #print("Huy")
 
     def turn_right(self, event):
         self.x = 2
         
-
     def go_up(self, event):
         self.y = -2
 
@@ -158,14 +160,20 @@ class Pacman:
         #self.canvas.delete('all')
         #root.update()
         self.canvas.move(self.id, self.x, self.y)
-        if self.hitwall():
-            self.stop()
 
     def hitwall(self):
-        for wall in outerWall:
-            if self.x >= wall[0] and self.x <= wall[2] and self.y >= wall[1] and self.y >=wall[3]:
-                return True
-        return False
+        pos = self.canvas.coords(self.id)
+        if pos[0] in range(0,800) and pos[2] in range (0, 700):
+            for wall in squareWalls:
+                if pos[1] >= wall[1] and pos[1] <= wall[3]:
+                    if pos[0] >= wall[0] and pos[0] <= wall[2]:
+                        print("True")
+                        return True
+                elif pos[3] >= wall[1] and pos[3]<= wall[3]:
+                    if pos[2] >= wall[0] and pos[2] <= wall[2]:
+                        return True
+        else:
+            return False
         
 outerWall = [ [5, 5, 5, 200], [5, 5, 400, 5], [20, 20, 20, 200],
                 [20, 20, 385, 20], [5, 200, 5, 215], [20, 200, 150, 200], 
@@ -187,10 +195,12 @@ WierdWalls = [[300, 140, 500, 140], [500, 140, 500, 160], [500, 160, 410, 160],
 
 
 graph = {(40,40):[[175, 40], [40, 110]],
-         (175, 40):[[175, 110], [40, 40] ],
-         (175, 110): [[175, 40], [40, 110]],
-         (40, 110):[[40, 40], [175, 110]]
+         (170, 40):[[170, 110], [40, 40] ],
+         (170, 110): [[170, 40], [40, 110]],
+         (40, 110):[[40, 40], [170, 110]],
+         (170, 170): [[170, 110]] 
     }   
+
 
 g = Game()  
 g.mainloop()
