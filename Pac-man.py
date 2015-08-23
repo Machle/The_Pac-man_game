@@ -15,18 +15,7 @@ class Game:
         self.tk.title("Pac-man")
         self.canvas = Canvas(self.tk, width = 800, height = 700, bg = 'black')
         self.Pac = Pacman(self.canvas, 'yellow')
-        '''i = 0 
-        while i <= 800:
-            j = 0
-            while j <= 800:
-                matrix.append ([j, i, j + 30, i + 30])
-                j = j + 30
-            i += 30
 
-        #self.drawSquareWall(110, 110, 180, 180)
-
-        for square in matrix:
-            self.drawSquareWall(square[0], square[1], square[2], square[3])'''
         for wall in outerWall: 
             self.drawWall(wall[0], wall[1], wall[2], wall[3])
             self.drawWall(800 - wall[0], wall[1], 800 - wall[2], wall[3])
@@ -109,9 +98,8 @@ class Game:
                 if not self.Pac.hitwall():
                     self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
                     #time.sleep()
-                else:
-                    #self.Pac.canvas.bind_all(self.Pac.hitwall(), self.Pac.stop)
-                    self.Pac.stop()
+                #else:
+                    #self.Pac.canvas.move(self.Pac.id)
                 #if self.Pac.eaten:
                     #self.canvas.grid()
             self.tk.update_idletasks()
@@ -123,8 +111,6 @@ class Pacman:
         self.canvas = canvas
         self.id = canvas.create_oval(10, 10, 35, 35, fill = color)
         self.canvas.move(self.id, 400, 375)
-        #self.pos = self.canvas.coords(self.id)
-        #print(pos)
         self.x = 0
         self.y = 0
         self.canvas.bind_all('<KeyPress-Left>', self.turn_left)
@@ -146,14 +132,35 @@ class Pacman:
 
     def turn_left(self, event):
         self.x = -2
+        self.canvas.move(self.id, self.x, self.y)
+        if self.hitwall():
+            self.x = +2
+            self.canvas.move(self.id, self.x, self.y)
+        self.x = -2
+
 
     def turn_right(self, event):
+        self.x = 2
+        self.canvas.move(self.id, self.x, self.y)
+        if self.hitwall():
+            self.x = -2
+            self.canvas.move(self.id, self.x, self.y)
         self.x = 2
         
     def go_up(self, event):
         self.y = -2
+        self.canvas.move(self.id, self.x, self.y)
+        if self.hitwall():
+            self.y = 2
+            self.canvas.move(self.id, self.x, self.y)
+        self.y = -2
 
     def go_down(self, event):
+        self.y = 2
+        self.canvas.move(self.id, self.x, self.y)
+        if self.hitwall():
+            self.y = -2
+            self.canvas.move(self.id, self.x, self.y)
         self.y = 2
 
     def draw(self):
@@ -163,17 +170,32 @@ class Pacman:
 
     def hitwall(self):
         pos = self.canvas.coords(self.id)
-        if pos[0] in range(0,800) and pos[2] in range (0, 700):
-            for wall in squareWalls:
-                if pos[1] >= wall[1] and pos[1] <= wall[3]:
-                    if pos[0] >= wall[0] and pos[0] <= wall[2]:
-                        print("True")
-                        return True
-                elif pos[3] >= wall[1] and pos[3]<= wall[3]:
-                    if pos[2] >= wall[0] and pos[2] <= wall[2]:
-                        return True
-        else:
-            return False
+        if pos[0] in range(0,800) and pos[2] in range(0, 800):
+            if pos[1] in range(0, 700) and pos[3] in range(0, 700):
+                for wall in squareWalls:
+                    if pos[1] in range(wall[1], wall[3]):
+                        if pos[0] >= wall[0] and pos[0] <= wall[2]:
+                            return True
+                    elif pos[3] in range(wall[1], wall[3]):
+                        if pos[2] >= wall[0] and pos[2] <= wall[2]:
+                            return True
+                    if pos[1] in range(wall[1], wall[3]):
+                        if pos[0] >= 800-wall[2] and pos[0] <= 800-wall[0]:
+                            return True
+                    elif pos[3] >= wall[1] and pos[3] <= wall[3]:
+                        if pos[2] >= 800-wall[2] and pos[2] <= 800-wall[0]:
+                            return True
+
+                for wall in outerWall:
+                    if wall[0] == wall[2]:
+                        if pos[0] == wall[0] or pos[2] == wall[0]:
+                            if pos[1] in range(wall[1], wall[3]) or pos[3] in range(wall[1], wall[3]):
+                                return True
+                    if wall[1] == wall[3]:
+                        if pos[1] == wall[1] or pos[3] == wall[1]:
+                            if pos[0] in range(wall[0], wall[2]) or pos[2] in range(wall[0], wall[2]):
+                                return True
+        return False 
         
 outerWall = [ [5, 5, 5, 200], [5, 5, 400, 5], [20, 20, 20, 200],
                 [20, 20, 385, 20], [5, 200, 5, 215], [20, 200, 150, 200], 
