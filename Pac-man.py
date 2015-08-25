@@ -33,9 +33,6 @@ class Game:
             self.drawSquareWall(wall[0], wall[1], wall[2], wall[3])
             self.drawSquareWall(800 - wall[0], wall[1], 800 - wall[2], wall[3])
 
-        for key in graph:
-            self.canvas.create_oval(key[0], key[1], key[0] + 10, key[1] + 10, fill = 'green')
-
         self.drawPoints()
         self.Pac.draw()
         self.canvas.pack()
@@ -97,11 +94,13 @@ class Game:
             if self.running:
                 if not self.Pac.hitwall():
                     self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
-                    #time.sleep()
-                #else:
-                    #self.Pac.canvas.move(self.Pac.id)
                 #if self.Pac.eaten:
                     #self.canvas.grid()
+                if self.Pac.first_teleport():
+                    self.Pac.canvas.move(self.Pac.id, 760, 0)
+
+                if self.Pac.second_teleport():
+                    self.Pac.canvas.move(self.Pac.id, -760, 0)
             self.tk.update_idletasks()
             self.tk.update()
             time.sleep(0.01)
@@ -164,45 +163,113 @@ class Pacman:
         self.y = 2
 
     def draw(self):
-        #self.canvas.delete('all')
-        #root.update()
         self.canvas.move(self.id, self.x, self.y)
 
     def hitwall(self):
         pos = self.canvas.coords(self.id)
-        if pos[0] in range(0,800) and pos[2] in range(0, 800):
-            if pos[1] in range(0, 700) and pos[3] in range(0, 700):
-                for wall in squareWalls:
-                    if pos[1] in range(wall[1], wall[3]):
-                        if pos[0] >= wall[0] and pos[0] <= wall[2]:
-                            return True
-                    elif pos[3] in range(wall[1], wall[3]):
-                        if pos[2] >= wall[0] and pos[2] <= wall[2]:
-                            return True
-                    if pos[1] in range(wall[1], wall[3]):
-                        if pos[0] >= 800-wall[2] and pos[0] <= 800-wall[0]:
-                            return True
-                    elif pos[3] >= wall[1] and pos[3] <= wall[3]:
-                        if pos[2] >= 800-wall[2] and pos[2] <= 800-wall[0]:
-                            return True
 
-                for wall in outerWall:
-                    if wall[0] == wall[2]:
-                        if pos[0] == wall[0] or pos[2] == wall[0]:
-                            if pos[1] in range(wall[1], wall[3]) or pos[3] in range(wall[1], wall[3]):
-                                return True
-                    if wall[1] == wall[3]:
-                        if pos[1] == wall[1] or pos[3] == wall[1]:
-                            if pos[0] in range(wall[0], wall[2]) or pos[2] in range(wall[0], wall[2]):
-                                return True
+        for wall in squareWalls:
+            if pos[1] in range(wall[1], wall[3]):
+                if pos[0] in range(wall[0], wall[2]):
+                    return True
+                if pos[2] in range(wall[0], wall[2]):
+                    return True
+            elif pos[3] in range(wall[1], wall[3]):
+                if pos[0] in range(wall[0], wall[2]):
+                    return True
+                if pos[2] in range(wall[0], wall[2]):
+                    return True
+            if pos[1] in range(wall[1], wall[3]):
+                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                    return True
+                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
+                    return True
+            elif pos[3] in range(wall[1], wall[3]):
+                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                    return True
+                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
+                    return True
+
+        for wall in outerWall:
+            if pos[1] > 90 and pos[3] < 680:
+                
+                if pos[0] <= wall[0] and pos[0] <= wall[2]:
+                    if pos[1] in range(wall[1], wall[3]):
+                        return True
+
+                if pos[2] <= wall[0] and pos[2] <=wall[2]:
+                    if pos[3] in range(wall[1], wall[3]):
+                        return True
+
+            if pos[3] > 680 or pos[1] < 20:
+                return True
+
+            if pos[1] > 20 and pos[1] < 90:
+                if pos[0] < 20:
+                    return True
+                if pos[2] > 780:
+                    return True
+                if pos[2] > 385 and pos[2] < 415:
+                    return True
+                if pos[0] > 385 and pos[0] < 415:
+                    return True
+
+            if pos[1] > 90 and pos[3] < 680:
+                
+                if pos[0] >= 800 - wall[0] and pos[0] >= 800 - wall[2]:
+                    if pos[1] in range(wall[1], wall[3]):
+                        return True
+
+                if pos[2] >= 800 - wall[0] and pos[2] >= 800 - wall[2]:
+                    if pos[3] in range(wall[1], wall[3]):
+                        return True
+
+        for wall in list_of_walls:
+            if pos[1] in range(wall[1], wall[3]):
+                if pos[0] in range(wall[0], wall[2]):
+                    return True
+                if pos[2] in range(wall[0], wall[2]):
+                    return True
+            elif pos[3] in range(wall[1], wall[3]):
+                if pos[0] in range(wall[0], wall[2]):
+                    return True
+                if pos[2] in range(wall[0], wall[2]):
+                    return True
+            if pos[1] in range(wall[1], wall[3]):
+                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                    return True
+                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
+                    return True
+            elif pos[3] in range(wall[1], wall[3]):
+                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                    return True
+                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
+                    return True
+
         return False 
+
+    def first_teleport(self):
+        pos = self.canvas.coords(self.id)
+        if pos[1] > 290 and pos[1] < 350:
+            if pos[0] < 0:
+                return True
+
+        return False
+
+    def second_teleport(self):
+        pos = self.canvas.coords(self.id)
+        if pos[3] > 290 and pos[3] < 350:
+            if pos[2] > 800:
+                return True
+        return False
+
         
 outerWall = [ [5, 5, 5, 200], [5, 5, 400, 5], [20, 20, 20, 200],
                 [20, 20, 385, 20], [5, 200, 5, 215], [20, 200, 150, 200], 
                 [5, 215, 135, 215], [135, 215, 135, 275],
-                [150, 200, 150, 290], [135, 215, 135, 275], [150, 290, 5, 290]
-                , [135, 275, 5, 275], [5, 350, 150, 350], [5, 365, 135, 365],
-                [150, 350, 150, 440] , [135, 365, 135, 425], [150, 440, 20, 440], [135, 425, 5, 425], [5, 425, 5, 695], [20, 440, 20, 545], [20, 575, 20, 680], [20, 545, 60, 545], [20, 575, 60, 575], [60, 545, 60, 575], [5, 695, 795, 695], [385, 20, 385, 90], [385, 90, 400, 90], [20, 680, 780, 680]
+                [150, 200, 150, 290], [135, 215, 135, 275], [5, 290, 150, 290]
+                , [5, 275, 135, 275], [5, 350, 150, 350], [5, 365, 135, 365],
+                [150, 350, 150, 440] , [135, 365, 135, 425], [20, 440, 150, 440], [5, 425, 135, 425], [5, 425, 5, 695], [20, 440, 20, 545], [20, 575, 20, 680], [20, 545, 60, 545], [20, 575, 60, 575], [60, 545, 60, 575], [5, 695, 795, 695], [385, 20, 385, 90], [385, 90, 400, 90], [20, 680, 780, 680]
                     ]
 
 squareWalls = [[60, 60, 150, 90], [200, 60, 340, 90], [60, 130, 150, 150], [200, 350, 240, 440], [200, 490, 340, 510]]
@@ -215,6 +282,7 @@ WierdWalls = [[300, 140, 500, 140], [500, 140, 500, 160], [500, 160, 410, 160],
                     [300, 580, 390, 580 ], [300, 580, 300, 550], [300, 550, 500, 550], [390, 580, 390, 640], [390, 640, 410, 640], [60, 640, 340, 640], [60, 640, 60, 620], [60, 620, 200, 620], [200, 620, 200, 550], [200, 550, 220, 550,],
                     [220, 550, 220, 620], [220, 620, 340, 620], [340, 620, 340, 640] ] 
 
+list_of_walls = [[300,140,500,160],[390,160,410,220], [560,140,600,290],[560,200,480,220], [240,200,320,220],[240,140,200,290],[150,480,130,575], [650,480,670,575], [150,480,60,500], [650,480,740,500], [300,420,500,440], [390,440,410,510], [300,550,500,580], [390,580,410,640], [60,620,340,640], [460,620,740,640], [200,550,220,620], [580,550,600, 620], [300, 270, 400, 370]]
 
 graph = {(40,40):[[175, 40], [40, 110]],
          (170, 40):[[170, 110], [40, 40] ],
@@ -222,7 +290,5 @@ graph = {(40,40):[[175, 40], [40, 110]],
          (40, 110):[[40, 40], [170, 110]],
          (170, 170): [[170, 110]] 
     }   
-
-
 g = Game()  
 g.mainloop()
