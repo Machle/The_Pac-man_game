@@ -15,6 +15,7 @@ class Game:
         self.tk.title("Pac-man")
         self.canvas = Canvas(self.tk, width = 800, height = 700, bg = 'black')
         self.Pac = Pacman(self.canvas, 'yellow')
+        self.score = 0
 
         for wall in outerWall: 
             self.drawWall(wall[0], wall[1], wall[2], wall[3])
@@ -32,6 +33,8 @@ class Game:
         for wall in squareWalls: 
             self.drawSquareWall(wall[0], wall[1], wall[2], wall[3])
             self.drawSquareWall(800 - wall[0], wall[1], 800 - wall[2], wall[3])
+
+        self.canvas.create_oval(66,40, 80, 54, fill='red')
 
         self.drawPoints()
         self.Pac.draw()
@@ -71,31 +74,39 @@ class Game:
 
     def BuildHorizontalPath(self, val1, val2, number, increment = 25, delta = 8):
         x, y = val1, val2
+        itemid1 = 0
+        itemid2 = 0
         for i in range(number):
             deltax = x + delta
             deltay = y + delta
-            self.canvas.create_oval(x, y, deltax, deltay, fill = 'white')
-            self.canvas.create_oval(800-x, y, 800-deltax, deltay, fill = 'white')
+            itemid1 = self.canvas.create_oval(x, y, deltax, deltay, fill = 'white')
+            itemid2 = self.canvas.create_oval(800-x, y, 800-deltax, deltay, fill = 'white')
+            points.append([(deltax + x)/2, (deltay + y)/2, itemid1])
+            points.append([800-(deltax + x)/2, (deltay+y)/2, itemid2])
             x += increment
-            points.append([x, y])
 
     def BuildVerticalPath(self, val1, val2, number, increment = 30, delta = 8):
+        itemid1 = 0
+        itemid2 = 0
         for i in range(number):
             x, y = val1, val2
             deltax = x + delta
             deltay = y + delta
-            self.canvas.create_oval(x, y, deltax, deltay, fill = 'white')
-            self.canvas.create_oval(800-x, y, 800-deltax, deltay, fill = 'white')
+            itemid1 = self.canvas.create_oval(x, y, deltax, deltay, fill = 'white')
+            itemid2 = self.canvas.create_oval(800-x, y, 800-deltax, deltay, 
+                fill = 'white')
+            points.append([(deltax + x)/2, (deltay + y)/2, itemid1])
+            points.append([800-(deltax + x)/2, (deltay + y)/2, itemid2])
             val2 += increment
-            points.append([x, y])
 
     def mainloop(self):
         while 1:
             if self.running:
                 if not self.Pac.hitwall():
                     self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
-                #if self.Pac.eaten:
-                    #self.canvas.grid()
+                if self.Pac.feed():
+                    self.score = self.score + 1
+                    print(self.score)
                 if self.Pac.first_teleport():
                     self.Pac.canvas.move(self.Pac.id, 760, 0)
 
@@ -119,10 +130,19 @@ class Pacman:
         self.canvas.bind_all('<KeyRelease>', self.stop)
         self.canvas.bind_all(self.hitwall(), self.stop)
 
-    def eaten(self):
+    def feed(self):
+        pos = self.canvas.coords(self.id)
         for point in points:
-            if self.x == point[0] and self.y == point[1]:
-                return True
+            if  point[0] >= pos[0] and point[0] <= pos[2]:
+                if point[1] >= pos[1] and point[1] <= pos[3]:
+                    self.canvas.delete(point[2])
+                    points.remove(point)
+                    return True
+            if  point[1] >= pos[1] and point[1] <= pos[3]:
+                if point[0] >= pos[0] and point[0] <= pos[2]:
+                    self.canvas.delete(point[2])
+                    points.remove(point)
+                    return True
         return False
 
     def stop(self, event):
@@ -290,5 +310,6 @@ graph = {(40,40):[[175, 40], [40, 110]],
          (40, 110):[[40, 40], [170, 110]],
          (170, 170): [[170, 110]] 
     }   
-g = Game()  
+g = Game()
+  
 g.mainloop()
