@@ -1,9 +1,9 @@
 from tkinter import *
 import time
 import threading
+from PIL import Image, ImageTk
 
 points = []
-
 matrix = []
 
 
@@ -16,7 +16,9 @@ class Game:
         self.canvas = Canvas(self.tk, width = 800, height = 700, bg = 'black')
         self.Pac = Pacman(self.canvas, 'yellow')
         self.score = 0
-
+        self.scoreid = Label(self.tk,
+                        text = "SCORE: {0}".format(self.score), bg = 'yellow', fg = 'black')
+        self.scoreid.pack()
         for wall in outerWall: 
             self.drawWall(wall[0], wall[1], wall[2], wall[3])
             self.drawWall(800 - wall[0], wall[1], 800 - wall[2], wall[3])
@@ -33,8 +35,6 @@ class Game:
         for wall in squareWalls: 
             self.drawSquareWall(wall[0], wall[1], wall[2], wall[3])
             self.drawSquareWall(800 - wall[0], wall[1], 800 - wall[2], wall[3])
-
-        self.canvas.create_oval(66,40, 80, 54, fill='red')
 
         self.drawPoints()
         self.Pac.draw()
@@ -71,6 +71,11 @@ class Game:
         self.BuildHorizontalPath(200, 527, 7, 27)
         self.BuildHorizontalPath(200, 456, 7, 27)
         self.BuildVerticalPath (362, 472, 3, 18)
+        self.BuildVerticalPath (274, 135, 3, 20)
+        self.BuildHorizontalPath (292, 175, 4, 18)
+        self.BuildVerticalPath (254, 550, 3, 20)
+        self.BuildHorizontalPath (274, 591, 5, 22)
+        self.BuildVerticalPath (363, 611, 2, 20)
 
     def BuildHorizontalPath(self, val1, val2, number, increment = 25, delta = 8):
         x, y = val1, val2
@@ -105,13 +110,14 @@ class Game:
                 if not self.Pac.hitwall():
                     self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
                 if self.Pac.feed():
-                    self.score = self.score + 1
-                    print(self.score)
+                    self.score = self.score + 10
+                    self.scoreid.config(text = "SCORE: {0}".format(self.score))
                 if self.Pac.first_teleport():
                     self.Pac.canvas.move(self.Pac.id, 760, 0)
 
                 if self.Pac.second_teleport():
                     self.Pac.canvas.move(self.Pac.id, -760, 0)
+               
             self.tk.update_idletasks()
             self.tk.update()
             time.sleep(0.01)
@@ -282,6 +288,35 @@ class Pacman:
             if pos[2] > 800:
                 return True
         return False
+     
+class Menu():
+
+    def __init__(self):
+        self.m = Tk()
+        self.m.title("Pac-man")
+        image1 = Image.open("/home/tano/The_Pac-man_game/pacman.jpg")
+        photo = ImageTk.PhotoImage(image1)
+        label1 = Label(self.m, image = photo )
+        label1.image = photo
+        label1.pack()
+        play_button = Button(self.m,text="Play", command = self.Play).pack()
+        exit_button = Button(self.m,text="Exit", command = self.Exit).pack()
+
+    def Play(self):
+        self.m.destroy()
+        g = Game()
+        g.mainloop()
+
+    def Exit(self):
+        self.m.destroy()
+
+    def mainloop(self):
+        while 1:
+               # self.canvas.insert(self.scoreid, 7, '{0}'.format(self.score))
+            self.m.update_idletasks()
+            self.m.update()
+            time.sleep(0.01)
+
 
         
 outerWall = [ [5, 5, 5, 200], [5, 5, 400, 5], [20, 20, 20, 200],
@@ -309,7 +344,7 @@ graph = {(40,40):[[175, 40], [40, 110]],
          (170, 110): [[170, 40], [40, 110]],
          (40, 110):[[40, 40], [170, 110]],
          (170, 170): [[170, 110]] 
-    }   
-g = Game()
-  
-g.mainloop()
+    }
+
+m = Menu()
+m.mainloop()
