@@ -1,13 +1,13 @@
 from tkinter import *
 import time
 import threading
+from threading import Timer
 from PIL import Image, ImageTk
 import random
+from tkinter import messagebox
 
 points = []
 matrix = []
-
-
 
 class Game:
 
@@ -16,11 +16,15 @@ class Game:
         self.tk.title("Pac-man")
         self.canvas = Canvas(self.tk, width = 800, height = 700, bg = 'black')
         self.Pac = Pacman(self.canvas, 'yellow')
-        self.Blinky = Ghost(self.canvas, 'red')
+        self.Blinky = Ghost(self.canvas, 'red', 320, 220, -2, 0)
+        self.Pinky = Ghost(self.canvas, 'pink', 360, 280, 0, 2 )
+        self.Inky = Ghost(self.canvas, 'blue', 380, 280, 0, 2)
+        self.Clyde = Ghost(self.canvas, 'brown', 410, 280, 0, -2)
         self.score = 0
         self.scoreid = Label(self.tk,
                         text = "SCORE: {0}".format(self.score), bg = 'yellow', fg = 'black')
         self.scoreid.pack()
+        self.frame = Frame(self.tk)
         for wall in outerWall: 
             self.drawWall(wall[0], wall[1], wall[2], wall[3])
             self.drawWall(800 - wall[0], wall[1], 800 - wall[2], wall[3])
@@ -41,8 +45,8 @@ class Game:
         self.drawPoints()
         self.Pac.draw()
         self.canvas.pack()
-        self.tk.update
         self.running = True
+        self.tk.update
 
     def drawWall(self, x0, y0, x1, y1, width = 3, color = 'blue'):
         self.canvas.create_line(x0, y0, x1, y1, width = width, fill = color)
@@ -79,14 +83,16 @@ class Game:
         self.BuildHorizontalPath (274, 591, 5, 22)
         self.BuildVerticalPath (363, 611, 2, 20)
 
-    def BuildHorizontalPath(self, val1, val2, number, increment = 25, delta = 8):
+    def BuildHorizontalPath(self, val1, val2, number, increment = 25, 
+                                    delta = 8):
         x, y = val1, val2
         itemid1 = 0
         itemid2 = 0
         for i in range(number):
             deltax = x + delta
             deltay = y + delta
-            itemid1 = self.canvas.create_oval(x, y, deltax, deltay, fill = 'white')
+            itemid1 = self.canvas.create_oval(x, y, deltax, deltay,
+                fill = 'white')
             itemid2 = self.canvas.create_oval(800-x, y, 800-deltax, deltay, fill = 'white')
             points.append([(deltax + x)/2, (deltay + y)/2, itemid1])
             points.append([800-(deltax + x)/2, (deltay+y)/2, itemid2])
@@ -99,44 +105,125 @@ class Game:
             x, y = val1, val2
             deltax = x + delta
             deltay = y + delta
-            itemid1 = self.canvas.create_oval(x, y, deltax, deltay, fill = 'white')
+            itemid1 = self.canvas.create_oval(x, y, deltax, deltay,
+                                        fill = 'white')
             itemid2 = self.canvas.create_oval(800-x, y, 800-deltax, deltay, 
-                fill = 'white')
+                                        fill = 'white')
             points.append([(deltax + x)/2, (deltay + y)/2, itemid1])
             points.append([800-(deltax + x)/2, (deltay + y)/2, itemid2])
             val2 += increment
 
-    def mainloop(self):
-        while 1:
-            if self.running:
-                first_moment = round(time.time())
-                if not self.Pac.hitwall():
-                    self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
+    def spawn_ghost(self):
+        if self.score == 200:
+            self.Pinky.canvas.move(self.Pinky.id, -345, -255)
+        if self.score == 400:
+            self.Inky.canvas.move(self.Inky.id, 350, 360)
+        if self.score == 800:
+            self.Clyde.canvas.move(self.Clyde.id, -300, 360)
+
+    def hit_pac(self, ghost):
+        pac_pos = self.Pac.canvas.coords(self.Pac.id)
+        pos = ghost.canvas.coords(ghost.id)
+        if pos[0] >= pac_pos[0] and pos[0] <= pac_pos[2]:
+            if pos[1] >= pac_pos[1] and pos[1] <= pac_pos[3]:
+                return True
+            elif pos[3] >= pac_pos[1] and pos[3] <= pac_pos[3]:
+                return True
+        elif pos[2] >= pac_pos[0] and pos[2] <= pac_pos[2]:
+            if pos[1] >= pac_pos[1] and pos[1] <= pac_pos[3]:
+                return True
+            elif pos[3] >= pac_pos[1] and pos[3] <= pac_pos[3]:
+                return True
+        elif pos[1] >= pac_pos[1] and pos[1] <= pac_pos[3]:
+            if pos[0] >= pac_pos[0] and pos[0] <= pac_pos[2]:
+                return True
+            elif pos[2] >= pac_pos[0] and pos[2] <= pac_pos[2]:
+                return True
+        elif pos[3] >= pac_pos[1] and pos[3] <= pac_pos[3]:
+            if pos[0] >= pac_pos[0] and pos[0] <= pac_pos[2]:
+                return True
+            elif pos[2] >= pac_pos[0] and pos[2] <= pac_pos[2]:
+                return True
+        return False
+
+    def game_over(self):
+        self.window = Tk()
+        self.window.title("Game over")
+        image1 = Image.open("/home/tano/The_Pac-man_game/game_over.png")
+        photo = ImageTk.PhotoImage(image1)
+        label = Label(self.window, text = "Your score: {0}".format(self.score), image = photo)
+        label.image = photo
+        label.pack()
+        button1 = Button(self.window, text = "Play again", 
+                            command = self.play_again).pack()
+        button2 = Button(self.window, text = "Exit", 
+                            command = self.exit).pack()
+
+    def play_again(self):
+        new_game = Game()
+        self.window.destroy()
+        new_game.animate()
+
+    def exit(self):
+        self.window.destroy()
+
+    def win(self):
+        self.window = Tk()
+        self.window.title("You win!")
+        label2 = Label(self.window, text = "Congratulations! You've won the game!")
+        label2.pack()
+        button1 = Button(self.window, text = "Play again", 
+                            command = self.play_again).pack()
+        button2 = Button(self.window, text = "Exit", 
+                            command = self.exit).pack()
+
+    def animate(self):
+        if self.running:
+            if not self.Pac.hitwall():
+                self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
                 if self.Pac.feed():
                     self.score = self.score + 10
+                    self.spawn_ghost()
                     self.scoreid.config(text = "SCORE: {0}".format(self.score))
                 if self.Pac.first_teleport():
                     self.Pac.canvas.move(self.Pac.id, 760, 0)
-
-                if self.Pac.second_teleport():
+                elif self.Pac.second_teleport():
                     self.Pac.canvas.move(self.Pac.id, -760, 0)
-
-                if not self.Blinky.hitwall():
-                    self.Blinky.canvas.move(self.Blinky.id, self.Blinky.x, self.Blinky.y)
-                if self.Blinky.hitwall():
-                    self.Blinky.change_direction()
-
-                last_moment = round(time.time())
-                self.tk.update_idletasks()
-                self.tk.update()
-                s = 0.1 - (last_moment - first_moment)
-                if s >= 0:
-                    time.sleep(s)
-
-            
-            
+            if not self.Blinky.hitwall():
+                self.Blinky.canvas.move(self.Blinky.id, self.Blinky.x, self.Blinky.y)
+            else:
+                self.Blinky.change_direction()
+            if self.hit_pac(self.Blinky):
+                self.tk.destroy()
+                self.game_over()
+            if not self.Pinky.hitwall():
+                self.Pinky.canvas.move(self.Pinky.id, self.Pinky.x, self.Pinky.y)
+            else:
+                self.Pinky.change_direction()
+            if self.hit_pac(self.Pinky):
+                self.tk.destroy()
+                self.game_over()
+            if not self.Inky.hitwall():
+                self.Inky.canvas.move(self.Inky.id, self.Inky.x, self.Inky.y)
+            else:
+                self.Inky.change_direction()
+            if self.hit_pac(self.Inky):
+                self.tk.destroy()
+                self.game_over()
+            if not self.Clyde.hitwall():
+                self.Clyde.canvas.move(self.Clyde.id, self.Clyde.x, self.Clyde.y)
+            else:
+                self.Clyde.change_direction()
+            if self.hit_pac(self.Clyde):
+                self.tk.destroy()
+                self.game_over()
+            if not points:
+                self.tk.destroy()
+                self.win()
+            self.frame.after(10, self.animate)
 
 class Pacman:
+
     def __init__(self, canvas, color):
         self.canvas = canvas
         self.id = canvas.create_oval(10, 10, 35, 35, fill = color)
@@ -148,7 +235,6 @@ class Pacman:
         self.canvas.bind_all('<KeyPress-Up>', self.go_up)
         self.canvas.bind_all('<KeyPress-Down>', self.go_down)
         self.canvas.bind_all('<KeyRelease>', self.stop)
-        #self.canvas.bind_all(self.hitwall, self.stop)
 
     def feed(self):
         pos = self.canvas.coords(self.id)
@@ -194,80 +280,81 @@ class Pacman:
             if pos[1] in range(wall[1], wall[3]):
                 if pos[0] in range(wall[0], wall[2]):
                     return True
-                if pos[2] in range(wall[0], wall[2]):
+                elif pos[2] in range(wall[0], wall[2]):
+                    return True
+                elif pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                    return True
+                elif pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
                     return True
             elif pos[3] in range(wall[1], wall[3]):
                 if pos[0] in range(wall[0], wall[2]):
                     return True
-                if pos[2] in range(wall[0], wall[2]):
+                elif pos[2] in range(wall[0], wall[2]):
                     return True
-            if pos[1] in range(wall[1], wall[3]):
-                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                elif pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
                     return True
-                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
+                elif pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
                     return True
-            elif pos[3] in range(wall[1], wall[3]):
-                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
-                    return True
-                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
-                    return True
-
         for wall in outerWall:
             if pos[1] > 90 and pos[3] < 680:
-                
                 if pos[0] <= wall[0] and pos[0] <= wall[2]:
                     if pos[1] in range(wall[1], wall[3]):
                         return True
-
-                if pos[2] <= wall[0] and pos[2] <=wall[2]:
+                    elif pos[3] in range(wall[1], wall[3]):
+                        return True
+                elif pos[2] <= wall[0] and pos[2] <=wall[2]:
                     if pos[3] in range(wall[1], wall[3]):
                         return True
-
-            if pos[3] > 680 or pos[1] < 20:
-                return True
-
-            if pos[1] > 20 and pos[1] < 90:
-                if pos[0] < 20:
-                    return True
-                if pos[2] > 780:
-                    return True
-                if pos[2] > 385 and pos[2] < 415:
-                    return True
-                if pos[0] > 385 and pos[0] < 415:
-                    return True
-
-            if pos[1] > 90 and pos[3] < 680:
-                
-                if pos[0] >= 800 - wall[0] and pos[0] >= 800 - wall[2]:
+                    elif pos[1] in range(wall[1], wall[3]):
+                        return True
+                elif pos[0] >= 800 - wall[0] and pos[0] >= 800 - wall[2]:
                     if pos[1] in range(wall[1], wall[3]):
                         return True
-
-                if pos[2] >= 800 - wall[0] and pos[2] >= 800 - wall[2]:
+                    elif pos[3] in range(wall[1], wall[3]):
+                        return True
+                elif pos[2] >= 800 - wall[0] and pos[2] >= 800 - wall[2]:
                     if pos[3] in range(wall[1], wall[3]):
                         return True
-
+                    elif pos[1] in range(wall[1], wall[3]):
+                        return True
+        if pos[3] > 680 or pos[1] < 20:
+            return True
+        elif pos[1] > 18 and pos[1] < 90:
+            if pos[0] < 20:
+                return True
+            elif pos[2] > 778:
+                return True
+            elif pos[2] > 385 and pos[2] < 415:
+                return True
+            elif pos[0] > 385 and pos[0] < 415:
+                return True
+        elif pos[2] > 780 and pos[3] > 670:
+            return True
+        elif pos[2] < 20 and pos[3] > 670:
+            return True
+        elif pos[2] > 780 and pos[3] < 30:
+            return True
+        elif pos[2] < 20 and pos[3] < 30:
+            return True
         for wall in list_of_walls:
             if pos[1] in range(wall[1], wall[3]):
                 if pos[0] in range(wall[0], wall[2]):
                     return True
-                if pos[2] in range(wall[0], wall[2]):
+                elif pos[2] in range(wall[0], wall[2]):
+                    return True
+                elif pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                    return True
+                elif pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
                     return True
             elif pos[3] in range(wall[1], wall[3]):
                 if pos[0] in range(wall[0], wall[2]):
                     return True
-                if pos[2] in range(wall[0], wall[2]):
+                elif pos[2] in range(wall[0], wall[2]):
                     return True
-            if pos[1] in range(wall[1], wall[3]):
-                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
+                elif pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
                     return True
-                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
+                elif pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
                     return True
-            elif pos[3] in range(wall[1], wall[3]):
-                if pos[0] >= 800 - wall[2] and pos[0]<= 800 - wall[0]:
-                    return True
-                if pos[2] >= 800 - wall[2] and pos[2]<= 800 - wall[0]:
-                    return True
-
         return False 
 
     def first_teleport(self):
@@ -291,34 +378,30 @@ class Menu():
         self.m.title("Pac-man")
         image1 = Image.open("/home/tano/The_Pac-man_game/pacman.jpg")
         photo = ImageTk.PhotoImage(image1)
-        label1 = Label(self.m, image = photo )
+        label1 = Label(self.m, image = photo)
         label1.image = photo
         label1.pack()
-        play_button = Button(self.m,text="Play", command = self.Play).pack()
-        exit_button = Button(self.m,text="Exit", command = self.Exit).pack()
+        play_button = Button(self.m, text="Play", command = self.play).pack()
+        exit_button = Button(self.m, text="Exit", command = self.exit).pack()
 
-    def Play(self):
+    def play(self):
         self.m.destroy()
         g = Game()
-        g.mainloop()
+        g.animate()
 
-    def Exit(self):
+    def exit(self):
         self.m.destroy()
-
-    def mainloop(self):
-        while 1:
-            self.m.update_idletasks()
-            self.m.update()
-            time.sleep(0.01)
 
 class Ghost(Pacman):
 
-    def __init__(self, canvas, color):
+    def __init__(self, canvas, color, xcoord,  ycoord, incr1, incr2):
         self.canvas = canvas
+        self.xcoord = xcoord
+        self.ycoord = ycoord
         self.id = canvas.create_oval(10, 10, 35, 35, fill = color)
-        self.canvas.move(self.id, 350, 220)
-        self.x = -2
-        self.y = 0
+        self.canvas.move(self.id, xcoord, ycoord)
+        self.x = incr1
+        self.y = incr2
 
     def movement(self):
         if self.x > 0:
@@ -331,21 +414,44 @@ class Ghost(Pacman):
             self.go_up
 
     def change_direction(self):
-        z = random.randrange(1, 4)
-        if z == 1:
+        rand = random.randrange(1, 16)
+        if rand % 4 == 1:
             self.x = 0
             self.y = 2
-        elif z == 2:
+        elif rand % 4 == 2:
             self.x = 2
             self.y = 0
-        elif z == 3:
+        elif rand % 4 == 3:
             self.x = 0
             self.y = -2
-        elif z == 4:
+        elif rand % 4 == 4:
             self.x = -2
             self.y = 0
 
-        
+    def hit_other_ghost(self, ghost):
+        pos = self.canvas.coords(self.id)
+        pos_other = ghost.canvas.coords(ghost.id)
+        if pos[0] >= pos_other[0] and pos[0] <= pos_other[2]:
+            if pos[1] >= pos_other[1] and pos[1] <= pos_other[3]:
+                return True
+            elif pos[3] >= pos_other[1] and pos[3] <= pos_other[3]:
+                return True
+        elif pos[2] >= pos_other[0] and pos[2] <= pos_other[2]:
+            if pos[1] >= pos_other[1] and pos[1] <= pos_other[3]:
+                return True
+            elif pos[3] >= pos_other[1] and pos[3] <= pos_other[3]:
+                return True
+        elif pos[1] >= pos_other[1] and pos[1] <= pos_other[3]:
+            if pos[0] >= pos_other[0] and pos[0] <= pos_other[2]:
+                return True
+            elif pos[2] >= pos_other[0] and pos[2] <= pos_other[2]:
+                return True
+        elif pos[3] >= pos_other[1] and pos[3] <= pos_other[3]:
+            if pos[0] >= pos_other[0] and pos[0] <= pos_other[2]:
+                return True
+            elif pos[2] >= pos_other[0] and pos[2] <= pos_other[2]:
+                return True
+        return False
         
 outerWall = [ [5, 5, 5, 200], [5, 5, 400, 5], [20, 20, 20, 200],
                 [20, 20, 385, 20], [5, 200, 5, 215], [20, 200, 150, 200], 
@@ -367,5 +473,5 @@ WierdWalls = [[300, 140, 500, 140], [500, 140, 500, 160], [500, 160, 410, 160],
 
 list_of_walls = [[300,140,500,160],[390,160,410,220], [560,140,600,290],[560,200,480,220], [240,200,320,220],[240,140,200,290],[150,480,130,575], [650,480,670,575], [150,480,60,500], [650,480,740,500], [300,420,500,440], [390,440,410,510], [300,550,500,580], [390,580,410,640], [60,620,340,640], [460,620,740,640], [200,550,220,620], [580,550,600, 620], [300, 270, 400, 370]]
 
-m = Menu()
-m.mainloop()
+my_menu = Menu()
+my_menu.m.mainloop()
