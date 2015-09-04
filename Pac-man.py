@@ -15,11 +15,11 @@ class Game:
         self.tk = Tk()
         self.tk.title("Pac-man")
         self.canvas = Canvas(self.tk, width = 800, height = 700, bg = 'black')
-        self.Pac = Pacman(self.canvas, 'yellow')
-        self.Blinky = Ghost(self.canvas, 'red', 320, 220, -2, 0)
-        self.Pinky = Ghost(self.canvas, 'pink', 360, 280, 0, 2 )
-        self.Inky = Ghost(self.canvas, 'blue', 380, 280, 0, 2)
-        self.Clyde = Ghost(self.canvas, 'brown', 410, 280, 0, -2)
+        self.pac = Pacman(self.canvas, 'yellow')
+        self.blinky = Ghost(self.canvas, 'red', 320, 220, -2, 0)
+        self.pinky = Ghost(self.canvas, 'pink', 360, 280, 0, 2 )
+        self.inky = Ghost(self.canvas, 'blue', 380, 280, 0, 2)
+        self.clyde = Ghost(self.canvas, 'brown', 410, 280, 0, -2)
         self.score = 0
         self.scoreid = Label(self.tk,
                         text = "SCORE: {0}".format(self.score), bg = 'yellow', fg = 'black')
@@ -43,7 +43,7 @@ class Game:
             self.drawSquareWall(800 - wall[0], wall[1], 800 - wall[2], wall[3])
 
         self.drawPoints()
-        self.Pac.draw()
+        self.pac.draw()
         self.canvas.pack()
         self.running = True
         self.tk.update
@@ -115,14 +115,14 @@ class Game:
 
     def spawn_ghost(self):
         if self.score == 200:
-            self.Pinky.canvas.move(self.Pinky.id, -345, -255)
+            self.pinky.canvas.move(self.pinky.id, -345, -255)
         if self.score == 400:
-            self.Inky.canvas.move(self.Inky.id, 350, 360)
+            self.inky.canvas.move(self.inky.id, 350, 360)
         if self.score == 800:
-            self.Clyde.canvas.move(self.Clyde.id, -300, 360)
+            self.clyde.canvas.move(self.clyde.id, -300, 360)
 
     def hit_pac(self, ghost):
-        pac_pos = self.Pac.canvas.coords(self.Pac.id)
+        pac_pos = self.pac.canvas.coords(self.pac.id)
         pos = ghost.canvas.coords(ghost.id)
         if pos[0] >= pac_pos[0] and pos[0] <= pac_pos[2]:
             if pos[1] >= pac_pos[1] and pos[1] <= pac_pos[3]:
@@ -179,48 +179,48 @@ class Game:
 
     def animate(self):
         if self.running:
-            if not self.Pac.hitwall():
-                self.Pac.canvas.move(self.Pac.id, self.Pac.x, self.Pac.y)
-                if self.Pac.feed():
+            if not self.pac.hitwall():
+                self.pac.canvas.move(self.pac.id, self.pac.x, self.pac.y)
+                if self.pac.feed():
                     self.score = self.score + 10
                     self.spawn_ghost()
                     self.scoreid.config(text = "SCORE: {0}".format(self.score))
-                if self.Pac.first_teleport():
-                    self.Pac.canvas.move(self.Pac.id, 760, 0)
-                elif self.Pac.second_teleport():
-                    self.Pac.canvas.move(self.Pac.id, -760, 0)
-            if not self.Blinky.hitwall():
-                self.Blinky.canvas.move(self.Blinky.id, self.Blinky.x, self.Blinky.y)
+                if self.pac.first_teleport():
+                    self.pac.canvas.move(self.Pac.id, 760, 0)
+                elif self.pac.second_teleport():
+                    self.pac.canvas.move(self.Pac.id, -760, 0)
+            if not self.blinky.hitwall():
+                self.blinky.canvas.move(self.blinky.id, self.blinky.x, self.blinky.y)
             else:
-                self.Blinky.change_direction()
-            if self.hit_pac(self.Blinky):
+                self.blinky.change_direction()
+            if self.hit_pac(self.blinky):
                 self.tk.destroy()
                 self.game_over()
-            if not self.Pinky.hitwall():
-                self.Pinky.canvas.move(self.Pinky.id, self.Pinky.x, self.Pinky.y)
+            if not self.pinky.hitwall():
+                self.pinky.canvas.move(self.pinky.id, self.pinky.x, self.pinky.y)
             else:
-                self.Pinky.change_direction()
-            if self.hit_pac(self.Pinky):
+                self.pinky.change_direction()
+            if self.hit_pac(self.pinky):
                 self.tk.destroy()
                 self.game_over()
-            if not self.Inky.hitwall():
-                self.Inky.canvas.move(self.Inky.id, self.Inky.x, self.Inky.y)
+            if not self.inky.hitwall():
+                self.inky.canvas.move(self.inky.id, self.inky.x, self.inky.y)
             else:
-                self.Inky.change_direction()
-            if self.hit_pac(self.Inky):
+                self.inky.change_direction()
+            if self.hit_pac(self.inky):
                 self.tk.destroy()
                 self.game_over()
-            if not self.Clyde.hitwall():
-                self.Clyde.canvas.move(self.Clyde.id, self.Clyde.x, self.Clyde.y)
+            if not self.clyde.hitwall():
+                self.clyde.canvas.move(self.clyde.id, self.clyde.x, self.clyde.y)
             else:
-                self.Clyde.change_direction()
-            if self.hit_pac(self.Clyde):
+                self.clyde.change_direction()
+            if self.hit_pac(self.clyde):
                 self.tk.destroy()
                 self.game_over()
             if not points:
                 self.tk.destroy()
                 self.win()
-            self.frame.after(10, self.animate)
+            self.frame.after(20, self.animate)
 
 class Pacman:
 
@@ -319,10 +319,10 @@ class Pacman:
                         return True
         if pos[3] > 680 or pos[1] < 20:
             return True
-        elif pos[1] > 18 and pos[1] < 90:
+        elif pos[1] > 20 and pos[1] < 90:
             if pos[0] < 20:
                 return True
-            elif pos[2] > 778:
+            elif pos[2] > 780:
                 return True
             elif pos[2] > 385 and pos[2] < 415:
                 return True
@@ -427,31 +427,6 @@ class Ghost(Pacman):
         elif rand % 4 == 4:
             self.x = -2
             self.y = 0
-
-    def hit_other_ghost(self, ghost):
-        pos = self.canvas.coords(self.id)
-        pos_other = ghost.canvas.coords(ghost.id)
-        if pos[0] >= pos_other[0] and pos[0] <= pos_other[2]:
-            if pos[1] >= pos_other[1] and pos[1] <= pos_other[3]:
-                return True
-            elif pos[3] >= pos_other[1] and pos[3] <= pos_other[3]:
-                return True
-        elif pos[2] >= pos_other[0] and pos[2] <= pos_other[2]:
-            if pos[1] >= pos_other[1] and pos[1] <= pos_other[3]:
-                return True
-            elif pos[3] >= pos_other[1] and pos[3] <= pos_other[3]:
-                return True
-        elif pos[1] >= pos_other[1] and pos[1] <= pos_other[3]:
-            if pos[0] >= pos_other[0] and pos[0] <= pos_other[2]:
-                return True
-            elif pos[2] >= pos_other[0] and pos[2] <= pos_other[2]:
-                return True
-        elif pos[3] >= pos_other[1] and pos[3] <= pos_other[3]:
-            if pos[0] >= pos_other[0] and pos[0] <= pos_other[2]:
-                return True
-            elif pos[2] >= pos_other[0] and pos[2] <= pos_other[2]:
-                return True
-        return False
         
 outerWall = [ [5, 5, 5, 200], [5, 5, 400, 5], [20, 20, 20, 200],
                 [20, 20, 385, 20], [5, 200, 5, 215], [20, 200, 150, 200], 
